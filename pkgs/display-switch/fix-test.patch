@@ -1,0 +1,40 @@
+File display-switch/.git is a directory while file tmp/.git is a regular file
+diff -ru display-switch/src/configuration.rs tmp/src/configuration.rs
+--- display-switch/src/configuration.rs	2022-10-08 17:43:42.691837231 -0700
++++ tmp/src/configuration.rs	2022-10-08 18:14:42.561078315 -0700
+@@ -172,8 +172,35 @@
+     use config::ConfigError;
+     use config::FileFormat::Ini;
+ 
++    // Sets $HOME to a known-usable value
++    // Necessary due to Nix sandboxing
++    struct HomeOverride {
++        old_home: Option<String>,
++    }
++
++    impl HomeOverride {
++        pub fn new() -> Self {
++            let old_home = std::env::var("HOME").ok();
++            std::env::set_var(
++                "HOME",
++               std::env::current_dir().expect("should be able to get $HOME")
++           );
++            Self { old_home }
++        }
++    }
++
++    impl Drop for HomeOverride {
++        fn drop(&mut self) {
++            match &self.old_home {
++                Some(home) => std::env::set_var("HOME", home),
++                None => std::env::remove_var("HOME"),
++            }
++        }
++    }
++
+     #[test]
+     fn test_log_file_name() {
++        let _override = HomeOverride::new();
+         let file_name = Configuration::log_file_name();
+         assert!(file_name.is_ok());
+         assert!(file_name.unwrap().ends_with("display-switch.log"))
