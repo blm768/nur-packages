@@ -76,6 +76,8 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.etc = {
+      # TODO: this may require wrapping values in quotes like the examples in the repo show.
+      # It may be worthwhile to check the nixpkgs manual; I think there was an example of doing that.
       "display-switch/display-switch.ini".text = lib.generators.toINIWithGlobalSection {} {
           globalSection = {
             usb_device = cfg.usbDevice;
